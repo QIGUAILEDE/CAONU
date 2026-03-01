@@ -650,7 +650,7 @@
             var R = parseFloat(document.getElementById('reject').value) || 0;
             var numerator = Math.pow((S * 1.5 + F), 2);
             var denominator = P + 1;
-            var result = ((numerator / denominator) + (R * 5)) / 5;
+            var result = ((numerator / denominator) - (R * 5)) / 5;
             document.getElementById('h-result').innerText = result.toFixed(1);
             return result;
         }
