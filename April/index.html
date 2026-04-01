@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统登录</title>
+    <style>
+        /* 全局样式 */
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f6f8fc; }
+        
+        /* 登录页样式 */
+        #login-page {
+            display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #fff;
+        }
+        .login-box {
+            border: 1px solid #dadce0; border-radius: 8px; padding: 40px; text-align: center; width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .login-box h1 { font-size: 24px; color: #202124; font-weight: 400; margin-bottom: 10px; }
+        .login-box p { color: #5f6368; margin-bottom: 30px; font-size: 14px; }
+        .login-box input {
+            width: 100%; padding: 12px 15px; margin-bottom: 20px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; font-size: 16px; outline: none;
+        }
+        .login-box input:focus { border-color: #1a73e8; border-width: 2px; padding: 11px 14px; }
+        .login-box button {
+            background-color: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; cursor: pointer; float: right; font-weight: bold;
+        }
+        .login-box button:hover { background-color: #1557b0; }
+
+        /* 邮箱页样式 (仿 Gmail) */
+        #email-page { display: none; height: 100vh; flex-direction: column; }
+        .header { display: flex; align-items: center; padding: 10px 20px; background-color: #fff; border-bottom: 1px solid #e0e0e0; }
+        .header .logo { font-size: 20px; color: #5f6368; font-weight: bold; margin-left: 10px; }
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 250px; padding: 15px; background-color: #f6f8fc; border-right: 1px solid #e0e0e0; }
+        .sidebar-item { padding: 10px 15px; border-radius: 0 15px 15px 0; color: #d93025; background-color: #fce8e6; font-weight: bold; cursor: pointer; }
+        .content { flex: 1; padding: 20px 40px; background-color: #fff; overflow-y: auto; }
+        
+        /* 邮件内容样式 */
+        .email-subject { font-size: 22px; color: #202124; margin-bottom: 20px; font-weight: 400; }
+        .email-meta { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 1px solid #e0e0e0; padding-bottom: 15px; }
+        .email-sender { font-weight: bold; color: #202124; }
+        .email-sender span { font-weight: normal; color: #5f6368; font-size: 12px; margin-left: 5px; }
+        .email-date { color: #5f6368; font-size: 12px; }
+        .email-body { color: #202124; line-height: 1.6; font-size: 14px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <div id="login-page">
+        <div class="login-box">
+            <h1>欢迎登录统一学术验证系统</h1>
+            <p>请输入您的真实姓名以查询最新期刊状态</p>
+            <input type="text" id="username" placeholder="输入姓名 (如: 张三 / John Doe)" required>
+            <div style="overflow: hidden;">
+                <button onclick="enterEmail()">查询状态</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="email-page">
+        <div class="header">
+            <div style="width: 24px; height: 24px; background-color: #ea4335; border-radius: 4px;"></div>
+            <div class="logo">WebMail - 收件箱 (1)</div>
+        </div>
+        <div class="main">
+            <div class="sidebar">
+                <div class="sidebar-item">📥 收件箱 (1)</div>
+                <div style="padding: 10px 15px; color: #5f6368; margin-top: 10px;">⭐ 星标邮件</div>
+                <div style="padding: 10px 15px; color: #5f6368;">📤 已发送</div>
+            </div>
+            <div class="content">
+                <div class="email-subject" id="e-subject">Loading...</div>
+                <div class="email-meta">
+                    <div class="email-sender" id="e-sender">Loading... <span>&lt;loading@domain.com&gt;</span></div>
+                    <div class="email-date" id="e-date">2026年4月1日 12:58</div>
+                </div>
+                <div class="email-body" id="e-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 期刊与信件模板库（在这里可以无限添加你想到的期刊！）
+        const journals = [
+            // 生化环材/顶刊
+            {
+                name: "Nature",
+                sender: "Nature Editorial Office",
+                email: "editor@nature.com",
+                subject: "Decision on your manuscript - ACCEPTED",
+                body: "Dear {name},\n\nWe are absolutely thrilled to inform you that your manuscript has been accepted for publication in Nature. \n\nYour groundbreaking discovery of how to successfully synthesize 'Nothingness' out of thin air has left our reviewers speechless. We believe this will rewrite the textbooks.\n\nPlease note: Page charges will be $1,000,000. We accept cash, kidney, or your PI's soul.\n\nBest regards,\nThe Nature Publishing Group\nHappy April Fool's Day!"
+            },
+            {
+                name: "Science",
+                sender: "Science Magazine",
+                email: "noreply@science.org",
+                subject: "Acceptance of your revolutionary paper",
+                body: "Dear Dr. {name},\n\nCongratulations! Your paper titled \"Why we should sleep 24 hours a day\" has been accepted by Science.\n\nReviewer #2 actually cried reading your methodology section. Your proposal to solve world peace by making everyone take a nap is nothing short of visionary.\n\nRegards,\nEditorial Board, Science"
+            },
+            {
+                name: "Cell",
+                sender: "Cell Press",
+                email: "decision@cell.com",
+                subject: "[Notification] Manuscript Accepted",
+                body: "Dear {name},\n\nWe are pleased to inform you that your paper has been accepted for publication in Cell.\n\nYour innovative approach to communicating with mitochondria via Wi-Fi is unprecedented. We are scheduling it for our upcoming cover.\n\nSincerely,\nEditor-in-Chief, Cell"
+            },
+            // 计算机/人工智能
+            {
+                name: "CVPR / TPAMI",
+                sender: "IEEE Computer Society",
+                email: "admin@computer.org",
+                subject: "Your Paper is Accepted as Oral Presentation",
+                body: "Dear {name},\n\nWe are pleased to inform you that your paper \"Training AGI with an Abacus: A Return to Tradition\" has been accepted as an ORAL presentation.\n\nOur deep learning models reviewed your paper and decided it was too powerful to reject. Welcome to the future.\n\nBest,\nProgram Chairs"
+            },
+            {
+                name: "Shift (恶搞期刊)",
+                sender: "The Journal of Shift",
+                email: "ctrl-v@shift-journal.net",
+                subject: "录用通知 - Shift 期刊",
+                body: "{name} 学者：\n\n您好！经过极其严格的双盲瞎审，您的论文《论Ctrl+C与Ctrl+V在水论文中的量子纠缠态应用》已被国际顶级开源期刊《Shift》正式录用！\n\n审稿人高度评价了您的排版技术。请于今日内缴纳版面费：人民币 0.5 元。\n\nShift 编委会"
+            },
+            // 文史哲
+            {
+                name: "中国社会科学",
+                sender: "《中国社会科学》编辑部",
+                email: "editor@cssn.cn",
+                subject: "【录用通知】您的稿件已通过终审",
+                body: "尊敬的 {name} 先生/女士：\n\n您好！您的稿件《论早起打工对现代人类精神文明的毁灭性打击》已通过本刊外审及终审，拟于今年第13期（特刊）发表。\n\n鉴于您的观点过于发人深省，编辑部全体成员决定今天下午集体旷工以示支持。\n\n祝好！\n《中国社会科学》编辑部"
+            },
+            // 恶搞/杂项
+            {
+                name: "Rubbish",
+                sender: "Journal of Advanced Rubbish",
+                email: "recycle@rubbish.edu",
+                subject: "Your Trash is Our Treasure - ACCEPTED",
+                body: "Dear {name},\n\nCongratulations! Your manuscript has been accepted to the Journal of Advanced Rubbish (Impact Factor: -5.0).\n\nReviewer #1 noted: \"This is the worst piece of literature I have ever read, which makes it a perfect fit for our journal.\"\n\nKeep up the garbage work!\n\nCheers,\nRubbish Editors"
+            }
+        ];
+
+        function enterEmail() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert("连名字都不填，科研态度很不端正啊！");
+                return;
+            }
+
+            // 1. 隐藏登录页，显示邮箱页
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('email-page').style.display = 'flex';
+            document.title = "WebMail - 收件箱";
+
+            // 2. 随机抽取一个期刊
+            const randomIndex = Math.floor(Math.random() * journals.length);
+            const journal = journals[randomIndex];
+
+            // 3. 动态填充邮件内容
+            document.getElementById('e-subject').innerText = journal.subject;
+            document.getElementById('e-sender').innerHTML = `${journal.sender} <span>&lt;${journal.email}&gt;</span>`;
+            
+            // 替换名字并处理换行符
+            const finalBody = journal.body.replace(/{name}/g, username);
+            document.getElementById('e-body').innerText = finalBody;
+
+            // 设置当前时间
+            const now = new Date();
+            const timeString = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            document.getElementById('e-date').innerText = timeString;
+        }
+    </script>
+</body>
+</html>
